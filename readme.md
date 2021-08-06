@@ -1,4 +1,27 @@
 # Index
+- [Instalacion](#instalacion)
+    + [Configuracion dispositivo](#configuracion-dispositivo)
+- [Estructura](#estructura)
+  * [Manifest](#manifest)
+  * [Java](#java)
+  * [Res](#res)
+    + [drawable](#drawable)
+    + [mipmap](#mipmap)
+    + [values](#values)
+      - [string](#string)
+- [Proyecto](#proyecto)
+  * [Activity](#activity)
+  * [View](#view)
+    + [Data Binding](#data-binding)
+- [Layout](#layout)
+    + [Lineal](#lineal)
+- [Logs](#logs)
+  * [Logcat](#logcat)
+  * [Log](#log)
+- [Mensajes](#mensajes)
+  * [Toasts](#toasts)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
 # Instalacion
 https://developer.android.com/studio/install?hl=es-419
@@ -16,6 +39,30 @@ Luego configurarlo de la siguiente manera:<br />
 
 # Estructura
 
+## Manifest
+Podemos configurar ciertas cosas
+```xml
+<application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher" // Icono de la aplicacion
+        android:label="@string/app_name" // Nombre de la aplicacion
+        android:roundIcon="@mipmap/ic_launcher_round" // Icono redondo
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        // Aca vamos a tener todas las actividades
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                // Main activiti va a ser la principal
+                <action android:name="android.intent.action.MAIN" /> 
+
+                // La primera que se va a lanzar
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+```
+
 ## Java
 En la carpeta java estara todo nuestro codigo
 
@@ -25,12 +72,36 @@ Estaran los recursos, por ejemplo pantallas
 ### drawable
 Imagenes y contenido multimedia
 
+### mipmap
+POdemos agregar iconos. Tenemos varias resoluciones y uno para cuadrado y otro para redondo.<br />
+Damos click der en mipmap > New > Image asset<br />
+Seleccionamos la imagen que nosotros queramos
+
+### values
+Para generar valores de diferentes idiomas generamos una carpeta **values-es** por ejemplo (para español)
+
+#### string
+Vamos a poner todos los textos estaticos de nuestra aplicacion<br />
+Con **Alt + Enter** los generamos de una forma facil
+
+```xml
+// translatable -> No tiene traduccion
+<resources>
+    <string name="app_name" translatable="false">Mi edad canina</string>
+    <string name="your_age">Your age</string>
+</resource>
+```
+
+```kotlin
+val result = getString(R.string.lalita)
+```
+
 # Proyecto
 
-### Activity
+## Activity
 Por cada actividad tenemos un archivo kotlin y el archivo xml que contiene el diseño de la aplicacion.
 
-### View
+## View
 Todas las cosas que podamos ver en la pantalla son View. Como por ejemplo imagenes, texto, botones, etc..<br />
 Tenemos atributos como color, tamaño, etc..
 ```xml
@@ -73,6 +144,44 @@ button.setOnClickListener {
     // cuando demos click al boton se ejecutara esto
 }
 ```
+
+### Data Binding
+Utilizar **findViewById** no es permormante porque es pesado, lo mejor es utilizar **binding**<br /><br />
+
+Vamos a **build.gradle** y despues damos click en **sync**
+```groovy
+apply plugin: 'kotlin-kapt'
+
+android {
+    ...
+    dataBinding {
+        enabled = true
+    }
+
+    // O podriamos usar tambien 
+    buildFeatures {
+        dataBinding true
+    }
+}
+```
+En el layout damos click en **Convert to data binding layout<br />
+```xml
+<layout>
+    <data>
+
+    </data>
+
+    // todo mi layout (LiearLayout)
+</layout>
+```
+```kotlin
+val binding = ActivityMainBinding.inflate(layoutInflater)
+setContentView(binding.root)
+
+val ageEdit = binding.ageEdit
+```
+
+
 # Layout
 
 ### Lineal
@@ -116,4 +225,14 @@ Log.d("MainActivity", "Mi debug")
 Log.i("MainActivity", "Mi info")
 Log.w("MainActivity", "Mi warm")
 Log.e("MainActivity", "Mi error")
+```
+
+# Mensajes
+
+## Toasts
+Mensaje que aparene en la parte inferior de la pantalla, aparece y se va
+```kotlin
+// contexto -> de donde se esta llamando
+// y duracion
+Toast.makeText(this, "Mi mensaje", Toast.LENGTH_SHORT).show()
 ```
