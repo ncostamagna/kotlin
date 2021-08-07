@@ -183,6 +183,8 @@ val ageEdit = binding.ageEdit
 
 
 # Layout
+Para elegir lo mejor es elegir la opcion en la cual tengas menos Views Layout<br />
+<img src="" />
 
 ### Lineal
 Los pone uno al lado del otro, de manera vertical u horizontal
@@ -198,6 +200,17 @@ Los pone uno al lado del otro, de manera vertical u horizontal
 
 </LinearLayout>
 ```
+
+### Frame
+Diseñado para mostrar un view a la vez, imagen, video, boton, ect..<br />
+Solo una a la vez, los view se traslapan entre ellos cuando se generan
+
+### Relative
+Acomodamos los View de la manera que queramos, en la parte de abajo, en el centro, etc..
+
+### Contraint
+Todo se hace en la parte del diseño, muy versatil pero se usa para pocos Views<br />
+
 
 # Logs
 
