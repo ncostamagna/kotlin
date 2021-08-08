@@ -117,13 +117,52 @@ Con **Alt + Enter** los generamos de una forma facil
 val result = getString(R.string.lalita)
 ```
 
-# Proyecto
+## Gradle
 
-## Activity
+### Build
+
+```groovy
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    defaultConfig {
+        applicationId "com.hackaprende.registrodesuperheroes"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release { // lo que va a ir a produccion
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    dataBinding {
+        enabled = true
+    }
+}
+
+dependencies {
+    // Dependencias
+}
+```
+
+# Activity
 Por cada actividad tenemos un archivo kotlin y el archivo xml que contiene el diseño de la aplicacion.<br />
 La principal es MainActivity<br />
 
-### Explicit Intent
+## Explicit Intent
 Vamos a usar **Intent** para ir a otra activity, nos permite enviar contenido de una activity a la otra, pero debemos especificar a que activitdad queremos ir
 
 ```kotlin
@@ -157,7 +196,7 @@ class DetailActivity : AppCompatActivity() {
         val extras = intent.extras!!
 ```
 
-### Implicit Intent
+## Implicit Intent
 Acciones, que aplicaciones pueden abrir ese intent, como la camara
 ```kotlin
 // abrir camara y esperar resultado
@@ -178,7 +217,7 @@ override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) 
     }
 
 ```
-### Parcelable
+## Parcelable
 Nos permite pasar objetos entre las actividades, para poder utilizarlo necesitamos agregar lo siguiente en el archivo **build.gradle**<br />
 Convierte los objetos en bytes para poder ser pasados<br />
 ```groovy
@@ -199,7 +238,7 @@ import kotlinx.android.parcel.Parcelize
 class Hero(val name: String, val alterEgo: String, val bio: String, val power: Float) : Parcelable
 ```
 
-## View
+# View
 Todas las cosas que podamos ver en la pantalla son View. Como por ejemplo imagenes, texto, botones, etc..<br />
 Tenemos atributos como color, tamaño, etc..
 ```xml
@@ -261,7 +300,7 @@ button.setOnClickListener {
      />
 
 ```
-### Data Binding
+## Data Binding
 Utilizar **findViewById** no es permormante porque es pesado, lo mejor es utilizar **binding**<br /><br />
 
 Vamos a **build.gradle** y despues damos click en **sync**
@@ -305,7 +344,7 @@ setContentView(binding.root)
 val ageEdit = binding.ageEdit
 ```
 
-### Scroll
+## Scroll
 POder agregar scroll a los views, los **ScrollView** solo pueden tener 1 hijo
 
 ```xml
@@ -330,6 +369,54 @@ POder agregar scroll a los views, los **ScrollView** solo pueden tener 1 hijo
 
 ```
 
+# ViewModel
+Nos sirve para seguir teniendo los datos en el ciclo de vida, aca estara toda la logica.<br />
+Por ejemplo, vamos a poder seguir teniendo los datos al girar el telefono<br />
+<img src="images/3.png" /><br />
+Debemos agregar la dependencia
+```groovy
+dependencies {
+    ...
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0"
+    ...
+}
+```
+**MainActivity**
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var viewModel: MainViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // creacion del viewmodel
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+
+    }
+
+    private fun resetScores() {
+        viewModel.resetScores()
+    }
+}
+```
+**MainViewModel**
+```kotlin
+// Todos los datos y valores los vamos a tener aca
+// Jamas debemos pasar nada que pueda referenciar al activity
+
+// hereda de ViewModel
+class MainViewModel: ViewModel() {
+    private var miVar = 0
+
+    fun resetScore(){
+        miVar = 0
+    }
+}
+```
 # Layout
 Para elegir lo mejor es elegir la opcion en la cual tengas menos Views Layout<br />
 <img src="" />
@@ -396,4 +483,14 @@ Mensaje que aparene en la parte inferior de la pantalla, aparece y se va
 // contexto -> de donde se esta llamando
 // y duracion
 Toast.makeText(this, "Mi mensaje", Toast.LENGTH_SHORT).show()
+```
+
+# LifeCycle
+<img src="images/2.png" /> <br />
+
+Cuando oprimimos **home** la aplicacion pasa a pause y stop<br />
+Cuando volteamos el celular se destrute la seccion
+
+```kotlin
+class MainActivity : AppCompatActivity
 ```
