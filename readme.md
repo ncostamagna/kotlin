@@ -58,6 +58,10 @@ val extras = intent.extras!!
 // si miVariable es null asigno ""
 val valor = miVariable ?: ""
 
+// puede ser null
+var objNull: String?
+objNull = null
+
 // validamoss que puede venir null
 val extra = data?.extras
 
@@ -70,6 +74,10 @@ companion object {
 // se le debe asignar valor antes de ser usada
 private lateinit var miVariable: ImageView
 
+// Unit es lo que retorna
+private fun hola(): Unit {
+
+}
 
 class MainViewModel: ViewModel() {
     private val _localScore = MutableLiveData<Int>()
@@ -731,6 +739,61 @@ Toast.makeText(this, "Mi mensaje", Toast.LENGTH_SHORT).show()
 Cuando oprimimos **home** la aplicacion pasa a pause y stop<br />
 Cuando volteamos el celular se destrute la seccion
 
+# Request
+
+## Retrofit
+
+```groovy
+dependencies {
+    implementation "com.squareup.retrofit2:retrofit:2.6.2"
+}
+```
+Debemos crear una interface con todos los request a realizar, debemos ejecutarlo de un ViewModel
 ```kotlin
-class MainActivity : AppCompatActivity
+
+package com.hackaprende.earthquakemonitor.api
+
+import com.hackaprende.earthquakemonitor.Constants
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.http.GET
+
+private val retrofit = Retrofit.Builder()
+    .baseUrl(Constants.BASE_URL) // Base URL
+    .addConverterFactory(MoshiConverterFactory.create())
+    .build()
+
+interface EarthquakeApiService {
+    @GET(Constants.GET_LAST_HOUR_URL)
+    suspend fun getLastHourEarthquakes(): EarthquakeJsonResponse
+}
+
+object EarthquakesApi {
+    val retrofitService : EarthquakeApiService by lazy {
+        retrofit.create(EarthquakeApiService::class.java)
+    }
+}
+```
+
+```kotlin
+
+```
+
+# Coroutines
+Correr varios hilos
+
+```kotlin
+private val job = Job()
+private val coroutineScope = CoroutineScope(Dispatcher.Main /* correr hilo principal */ + job)
+
+
+job.cancel() // matar el job
+
+coroutineScope.launch {
+    withContext(Dispatchers.IO) {
+
+        // ultimo valor es lo que devuelve esta garcha
+    }
+}
+
 ```
