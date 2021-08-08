@@ -57,6 +57,33 @@ companion object {
 
 // se le debe asignar valor antes de ser usada
 private lateinit var miVariable: ImageView
+
+
+class MainViewModel: ViewModel() {
+    private val _localScore = MutableLiveData<Int>()
+
+    // creamos un getter
+    val localScore: LiveData<Int>
+        get() = _localScore
+
+    private val _visitorScore = MutableLiveData<Int>()
+
+    // creamos un getter
+    val visitorScore: LiveData<Int>
+        get() = _visitorScore
+
+    // lo primero que se va a ejecutar
+    init {
+        resetScores()
+    }
+}
+```
+
+```xml
+<Button
+    // hace la ejecucion de la funcion al momento de darle click
+    android:onClick="@{() -> mainViewModel.decreseFunction()}"
+    />
 ```
 # Estructura
 
@@ -415,6 +442,48 @@ class MainViewModel: ViewModel() {
     fun resetScore(){
         miVar = 0
     }
+}
+```
+
+## LiveData
+Para que el ViewModel sea conciente del ciclo de vida<br />
+Son variables que contienen otras variables
+
+- LiveData Normal: Solo leer valores
+- LiveData Mutable: Asignarlos y leerlos
+
+```kotlin
+class MainViewModel: ViewModel() {
+    val localScore: MutableLiveData<Int> = MutableLiveData()
+    val visitorScore: MutableLiveData<Int> = MutableLiveData()
+
+    // Se ejecuta al inicio de ejecutarse el ViewModel
+    init {
+        resetScores()
+    }
+
+    fun resetScores() {
+        localScore.value = 0
+        visitorScore.value = 0
+    }
+}
+```
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        ...
+
+        viewModel.localScore.observe(this, Observer {
+            // un observador
+            // cuando localScore cambie va a llamar directamente a esto
+
+            binding.localScoreText.text = localStoreValue.toString()
+        })
+
+    }
+
 }
 ```
 # Layout
