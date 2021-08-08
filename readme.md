@@ -1,6 +1,7 @@
 # Index
 - [Instalacion](#instalacion)
     + [Configuracion dispositivo](#configuracion-dispositivo)
+- [Lenguaje](#lenguaje)
 - [Estructura](#estructura)
   * [Manifest](#manifest)
   * [Java](#java)
@@ -9,17 +10,28 @@
     + [mipmap](#mipmap)
     + [values](#values)
       - [string](#string)
-- [Proyecto](#proyecto)
-  * [Activity](#activity)
-  * [View](#view)
-    + [Data Binding](#data-binding)
+  * [Gradle](#gradle)
+    + [Build](#build)
+- [Activity](#activity)
+  * [Explicit Intent](#explicit-intent)
+  * [Implicit Intent](#implicit-intent)
+  * [Parcelable](#parcelable)
+- [View](#view)
+  * [Data Binding](#data-binding)
+  * [Scroll](#scroll)
+- [ViewModel](#viewmodel)
+  * [LiveData](#livedata)
 - [Layout](#layout)
     + [Lineal](#lineal)
+    + [Frame](#frame)
+    + [Relative](#relative)
+    + [Contraint](#contraint)
 - [Logs](#logs)
   * [Logcat](#logcat)
   * [Log](#log)
 - [Mensajes](#mensajes)
   * [Toasts](#toasts)
+- [LifeCycle](#lifecycle)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -486,6 +498,165 @@ class MainActivity : AppCompatActivity() {
 
 }
 ```
+
+# RecyclerView
+IMplementacion de listas, recicla las listas y las vuelve a utilizar, por ejemplo las listas que no se ven en el scroll
+```groovy
+dependencies {
+    ...
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    ...
+}
+```
+
+```xml
+<androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/eq_recycler"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" />
+```
+Cada **RecyclerView** va a tener este contenido
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    // Usa RelativeLayout porque tenia problemas con el LinearLayout
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+        ...
+    </RelativeLayout>
+</layout>
+```
+## Asignacion
+Para asignar los valores al recyclerView lo vamos a hacer mediante un **Adapter**<br/>
+Todos los adapters deben tener **onCreateViewHolder** y **onBindViewHolder**<br />
+
+```kotlin
+// ListAdapter recibe el objeto (en este caso terremoto)
+// y el ViewHolder que nos va a ayudar a reciclar nuestras listas
+class EqAdapter(val context: Context) : ListAdapter<Earthquake, EqAdapter.ViewHolder>(
+    DiffCallback
+) {
+
+    // Que item cambio, cual se agrego, etc..
+    companion object DiffCallback : DiffUtil.ItemCallback<Earthquake>() {
+        override fun areItemsTheSame(oldItem: Earthquake, newItem: Earthquake): Boolean {
+            // si tienen el mismo ID son el mismo
+            return oldItem === newItem
+        }
+
+        override fun areContentsTheSame(oldItem: Earthquake, newItem: Earthquake): Boolean {
+            // Compara contenido de los 2 elementos
+            return oldItem.id == newItem.id
+        }
+    }
+
+    private lateinit var onItemClickListener: ((earthquake: Earthquake) -> Unit)
+
+    fun setOnItemClickListener(onItemClickListener: (earthquake: Earthquake) -> Unit) {
+        this.onItemClickListener = onItemClickListener
+    }
+
+    // EqListItemBinding es para manejar las listas de binding
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = EqListItemBinding.inflate(LayoutInflater.from(parent.context))
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        // lo recibimos en la posicion correspondiente que recibimos
+        val earthquake = getItem(position)
+        holder.bind(earthquake) // cargamos los datos
+    }
+
+    // el ViewHolder recibe el View 
+    inner class ViewHolder(private val binding: EqListItemBinding):
+        RecyclerView.ViewHolder(binding.root) {
+        // acrgamos los datos del terremoto
+        fun bind(earthquake: Earthquake) {
+            binding.eqListItemMagnitude.text = context.getString(R.string.magnitude_format,
+                earthquake.magnitude)
+            binding.eqListItemTitle.text = earthquake.place
+
+            binding.root.setOnClickListener {
+                if (::onItemClickListener.isInitialized) {
+                    onItemClickListener(earthquake)
+                }
+            }
+        }
+    }
+}
+```
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val viewModel = ViewModelProvider(this,
+            MainViewModelFactory(application)).get(MainViewModel::class.java)
+
+        val recyclerView = binding.eqRecycler
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
+        val adapter = EqAdapter(this)
+        recyclerView.adapter = adapter
+
+        adapter.setOnItemClickListener {
+            openDetailActivity(it)
+        }
+
+        viewModel.eqListLiveData.observe(this, Observer {
+            adapter.submitList(it)
+            if (it.size == 0) {
+                recyclerView.visibility = View.GONE
+                binding.eqEmptyView.visibility = View.VISIBLE
+            } else {
+                recyclerView.visibility = View.VISIBLE
+                binding.eqEmptyView.visibility = View.GONE
+            }
+        })
+
+        viewModel.statusLiveData.observe(this, Observer {
+            if (it == ApiResponseStatus.LOADING) {
+                binding.loadingWheel.visibility = View.VISIBLE
+            } else {
+                binding.loadingWheel.visibility = View.GONE
+            }
+
+            if (it == ApiResponseStatus.NO_INTERNET_CONNECTION) {
+                Toast.makeText(this, R.string.no_internet_connection,
+                    Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun openDetailActivity(earthquake: Earthquake) {
+        val intent = Intent(this, EqDetailActivity::class.java)
+        intent.putExtra(EqDetailActivity.EQ_KEY, earthquake)
+        startActivity(intent)
+    }
+}
+```
+## LinearLayout Manager
+Uno abajo del otro, como whatsapp. Listas horizontales o verticales
+
+## GridLayout Manager
+En grillas, x2, x3, etc..
+
+## Staggered GridLayout Manager
+En grillas pero como tetris, de diferentes tamaños y posiciones, como printerest
+
 # Layout
 Para elegir lo mejor es elegir la opcion en la cual tengas menos Views Layout<br />
 <img src="" />

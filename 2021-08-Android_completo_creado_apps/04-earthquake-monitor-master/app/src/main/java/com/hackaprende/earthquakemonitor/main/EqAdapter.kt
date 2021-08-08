@@ -48,6 +48,7 @@ class EqAdapter(val context: Context) : ListAdapter<Earthquake, EqAdapter.ViewHo
             binding.eqListItemTitle.text = earthquake.place
 
             binding.root.setOnClickListener {
+                // creo que el pelotudo le pone :: para hacer referencia al objeto de arriba
                 if (::onItemClickListener.isInitialized) {
                     onItemClickListener(earthquake)
                 }
