@@ -37,6 +37,27 @@ Luego configurarlo de la siguiente manera:<br />
 - que diga permanecer activo
 - Depuracion por USB
 
+
+# Lenguaje
+```kotlin
+// decimos que no puede ser null
+val extras = intent.extras!!
+
+// si miVariable es null asigno ""
+val valor = miVariable ?: ""
+
+// validamoss que puede venir null
+val extra = data?.extras
+
+// crear constantes o componentes estaticos
+companion object {
+    const val HERO_KEY = "hero"
+    const val HERO_BITMAP_KEY = "hero_bitmap"
+}
+
+// se le debe asignar valor antes de ser usada
+private lateinit var miVariable: ImageView
+```
 # Estructura
 
 ## Manifest
@@ -99,7 +120,84 @@ val result = getString(R.string.lalita)
 # Proyecto
 
 ## Activity
-Por cada actividad tenemos un archivo kotlin y el archivo xml que contiene el diseño de la aplicacion.
+Por cada actividad tenemos un archivo kotlin y el archivo xml que contiene el diseño de la aplicacion.<br />
+La principal es MainActivity<br />
+
+### Explicit Intent
+Vamos a usar **Intent** para ir a otra activity, nos permite enviar contenido de una activity a la otra, pero debemos especificar a que activitdad queremos ir
+
+```kotlin
+val binding = ActivityMainBinding.inflate(layoutInflater)
+setContentView(binding.root)
+
+binding.saveButton.setOnClickListener {
+    val hero = Hero("Nombre", "otro campos", "detalle", "estrellita")
+    openDetailsActivity(hero)
+}
+
+private fun openDetailsActivity(hero: Hero) {
+    // Intent(desde aqui, hasta aqui)
+    val intent = Intent(this, DetailActivity::class.java)
+    // intent.putExtra("campo","valor")
+    intent.putExtra(DetailActivity.HERO_KEY, hero)
+    intent.putExtra(DetailActivity.HERO_BITMAP_KEY, heroBitmap)
+    startActivity(intent)
+}
+
+```
+**Para recibir los valores**
+```kotlin
+class DetailActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val binding = ActivityDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // obtenemos los valores, con los !! decimos que no puede ser null
+        val extras = intent.extras!!
+```
+
+### Implicit Intent
+Acciones, que aplicaciones pueden abrir ese intent, como la camara
+```kotlin
+// abrir camara y esperar resultado
+val camaraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+startActivityForResult(camaraIntent, 1000) // numero de request, identificador
+```
+```kotlin
+
+Se ejecutara luego de haber recibido el resultado
+override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == Activity.RESULT_OK && requestCode == 1000) {
+            val extras = data?.extras
+            heroBitmap = extras?.get("data") as Bitmap
+            superheroImage.setImageBitmap(heroBitmap!!)
+        }
+    }
+
+```
+### Parcelable
+Nos permite pasar objetos entre las actividades, para poder utilizarlo necesitamos agregar lo siguiente en el archivo **build.gradle**<br />
+Convierte los objetos en bytes para poder ser pasados<br />
+```groovy
+plugins {
+    id 'com.android.application'
+    id 'kotlin-parcelize'
+    // Otros plugins
+}
+```
+El objeto debemos definirlo como parcelize
+```kotlin
+package com.hackaprende.registrodesuperheroes
+
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
+
+@Parcelize
+class Hero(val name: String, val alterEgo: String, val bio: String, val power: Float) : Parcelable
+```
 
 ## View
 Todas las cosas que podamos ver en la pantalla son View. Como por ejemplo imagenes, texto, botones, etc..<br />
@@ -145,6 +243,24 @@ button.setOnClickListener {
 }
 ```
 
+**Relative Layout**<br />
+```xml
+<ImageView
+    android:id="@+id/superhero_image" />
+
+<EditText
+    android:id="@+id/superhero_name_edit"
+    android:layout_alignTop="@id/superhero_image" //toma como referencia el id superhero_image
+    android:layout_marginStart="16dp"
+    android:layout_toEndOf="@id/superhero_image"
+    android:hint="@string/superhero_name" />
+
+<Button
+    android:id="@+id/save_button"
+    android:layout_alignParentBottom="true" // poner abajo de la pantalla
+     />
+
+```
 ### Data Binding
 Utilizar **findViewById** no es permormante porque es pesado, lo mejor es utilizar **binding**<br /><br />
 
@@ -168,10 +284,18 @@ En el layout damos click en **Convert to data binding layout<br />
 ```xml
 <layout>
     <data>
-
+        // variables que podemos usar directamente en el layout
+        <variable
+            name="superhero"
+            type="com.lala.pija.Superhero"
+        />
     </data>
 
     // todo mi layout (LiearLayout)
+
+        <TextView
+            android:text="@{superhero.name}"
+        />
 </layout>
 ```
 ```kotlin
@@ -181,6 +305,30 @@ setContentView(binding.root)
 val ageEdit = binding.ageEdit
 ```
 
+### Scroll
+POder agregar scroll a los views, los **ScrollView** solo pueden tener 1 hijo
+
+```xml
+
+<Button
+    android:id="@+id/save_button"
+    android:text="@string/save" />
+
+ <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_above="@id/save_button"> // esta arriba del boton
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                ...
+             </RelativeLayout>
+ </ScrollView
+
+```
 
 # Layout
 Para elegir lo mejor es elegir la opcion en la cual tengas menos Views Layout<br />
